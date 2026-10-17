@@ -7,11 +7,13 @@ jobs:
     timeout-minutes: 180
     steps:
       - uses: actions/checkout@v4
-      - name: Set up Android SDK
-        uses: android-actions/setup-android@v3
       - name: Install Android NDK
         run: |
-          sdkmanager "ndk;27.2.12479018"
+          export ANDROID_HOME="${ANDROID_HOME:-/usr/local/lib/android/sdk}"
+          SDKM="$(find "$ANDROID_HOME/cmdline-tools" -name sdkmanager | head -n1)"
+          echo "Using sdkmanager: $SDKM"
+          yes | "$SDKM" --licenses > /dev/null || true
+          "$SDKM" "ndk;27.2.12479018"
           echo "ANDROID_NDK_HOME=$ANDROID_HOME/ndk/27.2.12479018" >> "$GITHUB_ENV"
       - name: Build libffmpeg.so for AudioKit JNI class
         run: |
