@@ -1,0 +1,33 @@
+name: Build AudioKit FFmpeg (arm64)
+on:
+  workflow_dispatch:
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 180
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+      - name: Install Android NDK
+        run: |
+          sdkmanager "ndk;27.2.12479018"
+          echo "ANDROID_NDK_HOME=$ANDROID_HOME/ndk/27.2.12479018" >> "$GITHUB_ENV"
+      - name: Build libffmpeg.so for AudioKit JNI class
+        run: |
+          chmod +x build_ffmpeg_lean.sh
+          JNI_CLASS="com/audiokit/app/FFmpegNative" ./build_ffmpeg_lean.sh
+      - name: Upload native library
+        uses: actions/upload-artifact@v4
+        if: success()
+        with:
+          name: libffmpeg-audiokit-arm64
+          path: build_mt/out/libffmpeg.so
+          if-no-files-found: error
+      - name: Upload build logs
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: ffmpeg-build-logs
+          path: build_mt/log_*.txt
+          if-no-files-found: ignore
